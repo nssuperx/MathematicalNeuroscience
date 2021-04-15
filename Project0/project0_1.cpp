@@ -1,7 +1,5 @@
 #include<iostream>
 #include<vector>
-#include<algorithm>
-#include<numeric>
 using namespace std;
 
 int main(){
@@ -15,21 +13,23 @@ int main(){
         }
     }
 
+    /* 出力
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             cout << A.at(i).at(j) << ' ';
         }
         cout << endl;
     }
+    */
 
-    cout << endl;
+    // cout << endl;
 
     for(int i=0; i<n; i++){
         x.at(i) = i;
-        cout << x.at(i) << ' ';
+        // cout << x.at(i) << ' ';
     }
 
-    cout << endl;
+    // cout << endl;
 
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
@@ -38,7 +38,8 @@ int main(){
     }
 
     for(int i=0; i<n; i++){
-        cout << y.at(i) << ' ';
+        cout << y.at(i) << ',';
+        if(i % 10 == 9) cout << endl;
     }
 
     cout << endl;

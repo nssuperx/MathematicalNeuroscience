@@ -277,3 +277,6 @@ TSWLatexianTemp*
 
 # python env
 env
+
+# report build file
+report.pdf

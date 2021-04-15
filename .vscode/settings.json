@@ -3,5 +3,129 @@
         "array": "cpp",
         "vector": "cpp",
         "cmath": "cpp"
-    }
+    },
+    "latex-workshop.latex.autoBuild.run":"onSave",
+    "latex-workshop.latex.autoClean.run": "onBuilt",
+    "latex-workshop.intellisense.package.enabled": true,
+    "latex-workshop.latex.clean.fileTypes": [
+        "*.aux",
+        "*.bbl",
+        "*.blg",
+        "*.idx",
+        "*.ind",
+        "*.lof",
+        "*.lot",
+        "*.out",
+        "*.toc",
+        "*.acn",
+        "*.acr",
+        "*.alg",
+        "*.glg",
+        "*.glo",
+        "*.gls",
+        "*.ist",
+        "*.fls",
+        "*.fdb_latexmk",
+        "*.snm",
+        "*.nav",
+        "*.dvi",
+        "*.synctex.gz"
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "uplatex+dvipdfmx",
+            "tools": [
+                "uplatex",
+                "uplatex",
+                "dvipdfmx-uptex"
+            ]
+        },
+        {
+            "name": "uplatex+pbibtex+dvipdfmx",
+            "tools": [
+                "uplatex",
+                "pbibtex",
+                "uplatex",
+                "uplatex",
+                "dvipdfmx-uptex"
+            ]
+        },
+        {
+            "name": "platex+dvipdfmx",
+            "tools": [
+                "platex",
+                "pbibtex",
+                "platex",
+                "platex",
+                "dvipdfmx-ptex"
+            ]
+        },
+        {
+            "name": "latexmk",
+            "tools": [
+                "latexmk"
+            ]
+        },
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "platex",
+            "command": "platex",
+            "args": [
+                "-interaction=nonstopmode",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "uplatex",
+            "command": "uplatex",
+            "args": [
+                "-interaction=nonstopmode",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "dvipdfmx-ptex",
+            "command": "dvipdfmx",
+            "args": [
+                "-f",
+                "ptex-ipaex.map",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "dvipdfmx-uptex",
+            "command": "dvipdfmx",
+            "args": [
+                "-f",
+                "uptex-ipaex.map",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": [
+                "%DOCFILE%"
+            ]
+        },
+        {
+            "name": "pbibtex",
+            "command": "pbibtex",
+            "args": [
+                "-kanji=utf8",
+                "%DOCFILE%"
+            ]
+        },
+        {
+            "name": "latexmk",
+            "command": "latexmk",
+            "args": [
+                "-silent",
+                "-outdir=%OUTDIR%",
+                "%DOC%"
+            ],
+        },
+    ],
+    "python.pythonPath": "env/bin/python"
 }

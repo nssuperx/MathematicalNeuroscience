@@ -1,4 +1,5 @@
 #include<iostream>
+#include<fstream>
 #include<vector>
 #include<cmath>
 using namespace std;
@@ -55,10 +56,12 @@ int main(){
         }
     }
 
+    ofstream output("project0_2.csv");
     for(vector<double> x: X){
         for(double num: x){
-            cout << num << ' ';
+            output << num << ',';
         }
-        cout << endl;
+        output << endl;
     }
+    output.close();
 }
