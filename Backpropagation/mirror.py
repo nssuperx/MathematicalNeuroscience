@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import itertools
 
-from xor import Net
+from mynet import Net
 
 # Mirror Symmetry !!!!
 
