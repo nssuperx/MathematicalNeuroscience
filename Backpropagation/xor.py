@@ -106,8 +106,8 @@ class Net:
                 self.s[j][k] += self.mu * rstar[j] * self.x[k]
 
 
-    def train(self, iterations=10000, progress_interval=10):
-        for i in range(iterations):
+    def train(self, progress_interval=10):
+        for i in range(self.iterations):
             a = random.randint(0, self.D_size - 1)
             x = self.D[a][0]
             y = self.D[a][1]
@@ -120,12 +120,12 @@ class Net:
         return self.log_E
 
 
-    def train_with_detail_logging(self, iterations=10000):
+    def train_with_detail_logging(self):
         if self.is_detail_logging is False:
             print("Can't logging. Please (detail_logging=False) when class initialize.")
             return
         
-        for i in range(iterations):
+        for i in range(self.iterations):
             a = random.randint(0, self.D_size - 1)
             x = self.D[a][0]
             y = self.D[a][1]
@@ -228,7 +228,7 @@ def main():
     progress_interval = 10
 
     xorNet = Net(D, n1, n2, mu, iterations)
-    log_E = xorNet.train(iterations, progress_interval)
+    log_E = xorNet.train(progress_interval)
     xorNet.test()
     
     x_index = range(iterations)
