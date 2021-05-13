@@ -12,9 +12,10 @@ random.seed(2021)
 def main():
     # const value
     n1 = 6
-    n2 = 8
+    n2 = 5
+    # n2_list = [1, 5, 10, 25, 50, 100]
     mu = 0.8
-    iterations = 80000
+    iterations = 100000
     progress_interval = 10
 
     # データ作成
@@ -37,8 +38,10 @@ def main():
             d[1] = 1
     
     # ここから実験
-    MSNet = Net(D, n1, n2, mu, iterations)
-    log_E = MSNet.train(progress_interval)
+    # for n2 in n2_list:
+    MSNet = Net(D, n1, n2, mu, iterations, detail_logging=True)
+    # log_E = MSNet.train(progress_interval)
+    log_E = MSNet.train_with_detail_logging(progress_interval)
     MSNet.test()
     
     x_index = range(iterations)

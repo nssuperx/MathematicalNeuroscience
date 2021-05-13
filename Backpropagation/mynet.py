@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 random.seed(2021)
 
 class Net:
-    def __init__(self, data, n1, n2, mu, iterations, detail_logging=False):
+    def __init__(self, data, n1, n2, mu, iterations, detail_logging=False, weight_mode="random"):
         # 使うデータ，入力と期待する出力のペア
         self.D = data
         self.D_size = len(self.D)
@@ -45,13 +45,8 @@ class Net:
         # 期待する出力
         self.y = None
 
-        # 初期値代入（ランダム）
-        for j in range(1, self.n2):
-            for k in range(self.n1):
-                self.s[j][k] = random.normalvariate(0,0.1)
-
-        for j in range(self.n2):
-            self.w[j] = random.normalvariate(0,0.1)
+        # 初期値代入
+        self.set_dafault_weight(weight_mode)
 
         # 詳細ログ取得用変数宣言
         if(detail_logging):
@@ -73,6 +68,43 @@ class Net:
         self.w[1] = 8.304037390324421
         self.w[2] = -8.94283529977682
         '''
+
+    def set_dafault_weight(self, weight_mode):
+        if(weight_mode == "zero"):
+            # 初期値代入（全部0.0）
+            for j in range(1, self.n2):
+                for k in range(self.n1):
+                    self.s[j][k] = 0.0
+
+            for j in range(self.n2):
+                self.w[j] = 0.0
+        
+        elif(weight_mode == "one"):
+            # 初期値代入（全部1）
+            for j in range(1, self.n2):
+                for k in range(self.n1):
+                    self.s[j][k] = 1
+
+            for j in range(self.n2):
+                self.w[j] = 1
+
+        elif(weight_mode == "huge"):
+            # 初期値代入（正負とも大きな値）
+            for j in range(1, self.n2):
+                for k in range(self.n1):
+                    self.s[j][k] = random.normalvariate(0,10)
+
+            for j in range(self.n2):
+                self.w[j] = random.normalvariate(0,10)
+
+        else:
+            # 初期値代入（ランダム）
+            for j in range(1, self.n2):
+                for k in range(self.n1):
+                    self.s[j][k] = random.normalvariate(0,0.1)
+
+            for j in range(self.n2):
+                self.w[j] = random.normalvariate(0,0.1)
 
 
     def forward(self, x, y):
@@ -120,7 +152,7 @@ class Net:
         return self.log_E
 
 
-    def train_with_detail_logging(self):
+    def train_with_detail_logging(self, progress_interval=10):
         if self.is_detail_logging is False:
             print("Can't logging. Please (detail_logging=False) when class initialize.")
             return
@@ -146,6 +178,9 @@ class Net:
 
             self.log_z[i] = self.z
 
+            if(i % progress_interval == 0):
+                self.calc_and_logging_correct_rate()
+
         return self.log_E
 
     def calc_and_logging_correct_rate(self):
@@ -154,10 +189,16 @@ class Net:
             x = d[0]
             y = d[1]
             self.forward(x, y)
+            '''
             if(y == 0):
                 sum_correct += 1 - self.z
             else:
                 sum_correct += self.z
+            '''
+
+            if(abs(self.z - y) < 0.5):
+                sum_correct += 1
+
         self.log_correct_rate.append(sum_correct/self.D_size)
 
     def test(self):
@@ -187,6 +228,7 @@ class Net:
         plt.show()
 
         fig = plt.figure()
+        fig.subplots_adjust(hspace=0.5)
         s = fig.add_subplot(221, xlabel="iterations", title="weight s")
         u = fig.add_subplot(222, xlabel="iterations", title="hidden u")
         w = fig.add_subplot(223, xlabel="iterations", title="weight w")
