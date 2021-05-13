@@ -3,6 +3,8 @@ import math
 import matplotlib.pyplot as plt
 import itertools
 
+from xor import Net
+
 # Mirror Symmetry !!!!
 
 # const value
@@ -10,8 +12,9 @@ n1 = 6
 n2 = 8
 mu = 0.8
 iterations = 80000
+progress_interval = 10
 
-random.seed(2020)
+random.seed(2021)
 
 # 1.1 Generate input pairs
 input_list = list(itertools.product(map(int, '01'), repeat=6))
@@ -31,6 +34,7 @@ for d in D:
     if cnt == input_size_half:
         d[1] = 1
 
+"""
 class MSNet:
     def __init__(self):
         self.n1 = n1 + 1    # add bias
@@ -182,15 +186,14 @@ class MSNet:
 
         for j in range(self.n2):
             print("w[" + str(j) + "]" + " = " + str(self.w[j]))
+"""
 
 
-def sigmoid(x):
-    return 1.0 / (1.0 + math.exp(-x))
 
 def main():
-    net = MSNet()
-    log_E = net.train(iterations, logging=False)
-    net.test()
+    MSNet = Net()
+    log_E = MSNet.train(iterations, progress_interval)
+    MSNet.test()
     
     x_index = range(iterations)
     plt.plot(x_index, log_E, linestyle='None', marker=".", ms=1)
@@ -198,9 +201,16 @@ def main():
     plt.title("error")
     plt.show()
 
-    net.show_log()
+    # 正解率
+    x_index = range(0, iterations, progress_interval)
+    plt.plot(x_index, MSNet.log_correct_rate, linestyle='None', marker=".", ms=1)
+    plt.xlabel("iterations")
+    plt.title("percentage of correct responses")
+    plt.show()
 
-    net.print_weight()
+    MSNet.show_log()
+
+    MSNet.print_weight()
 
 if __name__ == "__main__":
     main()

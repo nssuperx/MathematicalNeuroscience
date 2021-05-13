@@ -4,33 +4,62 @@ import matplotlib.pyplot as plt
 
 # XOR Problem !!!
 
-# constant value
-D = [[[1,0,0],0],[[1,0,1],1],[[1,1,0],1],[[1,1,1],0]]
-D_size = len(D)
+random.seed(2021)
 
-n1 = 2
-n2 = 2
-mu = 0.01
-iterations = 10000
+class Net:
+    def __init__(self, data, n1, n2, mu, iterations, detail_logging=False):
+        # 使うデータ，入力と期待する出力のペア
+        self.D = data
+        self.D_size = len(self.D)
+        # 学習係数
+        self.mu = mu
+        # 繰り返し回数
+        self.iterations = iterations
+        # ログをたくさん取るかのフラグ
+        self.is_detail_logging = detail_logging
 
-random.seed(2020)
-
-class xornet:
-    def __init__(self):
+        # 入力数と中間層(2層目)の数を設定
         self.n1 = n1 + 1    # add bias
         self.n2 = n2 + 1
 
+        # 重み
         self.s = [[0.0] * self.n1 for i in range(self.n2)] # s[0]は使用しない
         self.w = [0.0] * self.n2
 
+        # 中間層の出力
         self.u = [0.0] * self.n2
 
+        # 出力
+        self.z = 0.0
+
+        # 誤差
+        self.E = 0.0
+        # 誤差のログ
+        self.log_E = [0.0] * self.iterations
+
+        # 正解率のログ
+        self.log_correct_rate = []
+
+        # ニューラルネットに与える入力
+        self.x = None
+        # 期待する出力
+        self.y = None
+
+        # 初期値代入（ランダム）
         for j in range(1, self.n2):
             for k in range(self.n1):
                 self.s[j][k] = random.normalvariate(0,0.1)
 
         for j in range(self.n2):
             self.w[j] = random.normalvariate(0,0.1)
+
+        # 詳細ログ取得用変数宣言
+        if(detail_logging):
+            self.log_aE =[[None] * self.iterations for i in range(self.D_size)]
+            self.log_u = [[0.0] * self.iterations for i in range(self.n2-1)]
+            self.log_w = [[0.0] * self.iterations for i in range(self.n2)]
+            self.log_s = [[[0.0] * self.iterations for i in range(self.n1)] for j in range(self.n2-1)]
+            self.log_z = [0.0] * self.iterations
 
         # 学習後の重み
         '''
@@ -62,59 +91,44 @@ class xornet:
         for j in range(self.n2):
             sum += self.w[j] * self.u[j]
         self.z = sigmoid(sum)
-
         self.E = (self.z - self.y) * (self.z - self.y) * 0.5
 
 
     def backpropagate(self):
         r = (self.y - self.z) * self.z * (1.0 - self.z)
         for j in range(self.n2):
-            self.w[j] += mu * r * self.u[j]
-
+            self.w[j] += self.mu * r * self.u[j]
         
         rstar = [0.0] * self.n2
         for j in range(1, self.n2):
             rstar[j] = r * self.w[j] * self.u[j] * (1.0 - self.u[j])
             for k in range(self.n1):
-                self.s[j][k] += mu * rstar[j] * self.x[k]
+                self.s[j][k] += self.mu * rstar[j] * self.x[k]
 
 
-    def train(self, iterations=10000, logging=False):
-        self.is_logged = logging
-        if logging is True:
-            self.train_logging(iterations)
-            return self.log_E
-
-        self.log_E = [0.0] * iterations
+    def train(self, iterations=10000, progress_interval=10):
         for i in range(iterations):
-            a = random.randint(0, D_size - 1)
-            x = D[a][0]
-            y = D[a][1]
+            a = random.randint(0, self.D_size - 1)
+            x = self.D[a][0]
+            y = self.D[a][1]
             self.forward(x, y)
             self.backpropagate()
             self.log_E[i] = self.E
+            if(i % progress_interval == 0):
+                self.calc_and_logging_correct_rate()
 
         return self.log_E
 
-    def test(self):
-        for d in D:
-            x = d[0]
-            y = d[1]
-            self.forward(x, y)
-            print(str(d[0]) + " " + str(d[1]) + " : " + str(self.z))
 
-
-    def train_logging(self, iterations=10000):
-        self.log_E = [0.0] * iterations
-        self.log_aE =[[None] * iterations for i in range(D_size)]
-        self.log_u = [[0.0] * iterations for i in range(self.n2-1)]
-        self.log_w = [[0.0] * iterations for i in range(self.n2)]
-        self.log_s = [[[0.0] * iterations for i in range(self.n1)] for j in range(self.n2-1)]
-        self.log_z = [0.0] * iterations
+    def train_with_detail_logging(self, iterations=10000):
+        if self.is_detail_logging is False:
+            print("Can't logging. Please (detail_logging=False) when class initialize.")
+            return
+        
         for i in range(iterations):
-            a = random.randint(0, D_size - 1)
-            x = D[a][0]
-            y = D[a][1]
+            a = random.randint(0, self.D_size - 1)
+            x = self.D[a][0]
+            y = self.D[a][1]
             self.forward(x, y)
             self.backpropagate()
             self.log_E[i] = self.E
@@ -134,19 +148,39 @@ class xornet:
 
         return self.log_E
 
+    def calc_and_logging_correct_rate(self):
+        sum_correct = 0.0
+        for d in self.D:
+            x = d[0]
+            y = d[1]
+            self.forward(x, y)
+            if(y == 0):
+                sum_correct += 1 - self.z
+            else:
+                sum_correct += self.z
+        self.log_correct_rate.append(sum_correct/self.D_size)
+
+    def test(self):
+        for d in self.D:
+            x = d[0]
+            y = d[1]
+            self.forward(x, y)
+            print(str(d[0]) + " " + str(d[1]) + " : " + str(self.z))
+
+
     def show_log(self):
-        if self.is_logged is False:
-            print("Can't show log. Please train(logging=True)")
+        if self.is_detail_logging is False:
+            print("Can't show log. Please (detail_logging=False) when class initialize.")
             return
 
-        x_index = range(iterations)
+        x_index = range(self.iterations)
 
         fig = plt.figure()
         e = fig.add_subplot(121, xlabel="iterations")
         ae = fig.add_subplot(122, xlabel="iterations")
         e.plot(x_index, self.log_E, linestyle='None', marker=".", ms=2)
 
-        for i in range(D_size):
+        for i in range(self.D_size):
             ae.plot(x_index, self.log_aE[i], linestyle='None', marker=".", ms=2)
 
         fig.suptitle("error")
@@ -184,9 +218,18 @@ def sigmoid(x):
     return 1.0 / (1.0 + math.exp(-x))
 
 def main():
-    net = xornet()
-    log_E = net.train(iterations, logging=True)
-    net.test()
+    # constant value
+    D = [[[1,0,0],0],[[1,0,1],1],[[1,1,0],1],[[1,1,1],0]]
+
+    n1 = 2
+    n2 = 2
+    mu = 0.7
+    iterations = 10000
+    progress_interval = 10
+
+    xorNet = Net(D, n1, n2, mu, iterations)
+    log_E = xorNet.train(iterations, progress_interval)
+    xorNet.test()
     
     x_index = range(iterations)
     plt.plot(x_index, log_E, linestyle='None', marker=".", ms=1)
@@ -194,9 +237,16 @@ def main():
     plt.title("error")
     plt.show()
 
-    net.show_log()
+    # 正解率
+    x_index = range(0, iterations, progress_interval)
+    plt.plot(x_index, xorNet.log_correct_rate, linestyle='None', marker=".", ms=1)
+    plt.xlabel("iterations")
+    plt.title("percentage of correct responses")
+    plt.show()
 
-    net.print_weight()
+    xorNet.show_log()
+
+    xorNet.print_weight()
 
 if __name__ == "__main__":
     main()
