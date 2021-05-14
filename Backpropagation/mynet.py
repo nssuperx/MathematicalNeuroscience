@@ -123,8 +123,8 @@ class Net:
             sum = 0.0
             for k in range(self.n1):
                 sum += self.s[j][k] * self.x[k]
-            # self.u[j] = sigmoid(sum)
-            self.u[j] = relu(sum)
+            self.u[j] = sigmoid(sum)
+            # self.u[j] = relu(sum)
             # self.u[j] = (sigmoid(sum) - 0.5) * 2
             # self.u[j] = math.tanh(sum)
 
