@@ -4,13 +4,19 @@ import matplotlib.pyplot as plt
 
 # XOR Problem !!!
 
-random.seed(2021)
+random.seed(20212021)
 
 class Net:
-    def __init__(self, data, n1, n2, mu, iterations, detail_logging=False, weight_mode="random"):
+    def __init__(self, data, n1, n2, mu, iterations, detail_logging=False, weight_mode="random", use_data=-1):
         # 使うデータ，入力と期待する出力のペア
         self.D = data
         self.D_size = len(self.D)
+        # 学習に使うデータの数
+        if (use_data < 0 or self.D_size < use_data):
+            self.use_data = self.D_size
+        else:
+            self.use_data = use_data
+
         # 学習係数
         self.mu = mu
         # 繰り返し回数
@@ -117,12 +123,18 @@ class Net:
             sum = 0.0
             for k in range(self.n1):
                 sum += self.s[j][k] * self.x[k]
-            self.u[j] = sigmoid(sum)
+            # self.u[j] = sigmoid(sum)
+            self.u[j] = relu(sum)
+            # self.u[j] = (sigmoid(sum) - 0.5) * 2
+            # self.u[j] = math.tanh(sum)
 
         sum = 0.0
         for j in range(self.n2):
             sum += self.w[j] * self.u[j]
+        # self.z = relu(sum)
         self.z = sigmoid(sum)
+        # self.z = (sigmoid(sum) - 0.5) * 2
+        # self.z = math.tanh(sum)
         self.E = (self.z - self.y) * (self.z - self.y) * 0.5
 
 
@@ -140,7 +152,7 @@ class Net:
 
     def train(self, progress_interval=10):
         for i in range(self.iterations):
-            a = random.randint(0, self.D_size - 1)
+            a = random.randint(0, self.use_data - 1)
             x = self.D[a][0]
             y = self.D[a][1]
             self.forward(x, y)
@@ -158,7 +170,7 @@ class Net:
             return
         
         for i in range(self.iterations):
-            a = random.randint(0, self.D_size - 1)
+            a = random.randint(0, self.use_data - 1)
             x = self.D[a][0]
             y = self.D[a][1]
             self.forward(x, y)
@@ -236,7 +248,7 @@ class Net:
 
         for j in range(self.n2-1):
             for k in range(self.n1):
-                s.plot(x_index, self.log_s[j][k], linestyle='None', marker=".", ms=1)
+                s.plot(x_index, self.log_s[j][k], marker=".", ms=1)
 
         for j in range(self.n2-1):
             u.plot(x_index, self.log_u[j], linestyle='None', marker=".", ms=1)
@@ -261,5 +273,8 @@ class Net:
 def sigmoid(x):
     return 1.0 / (1.0 + math.exp(-x))
 
-def relu():
-    pass
+def relu(x):
+    if(x >= 0):
+        return x
+    else:
+        return 0

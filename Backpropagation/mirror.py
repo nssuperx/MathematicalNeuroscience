@@ -15,7 +15,7 @@ def main():
     n2 = 5
     # n2_list = [1, 5, 10, 25, 50, 100]
     mu = 0.8
-    iterations = 100000
+    iterations = 80000
     progress_interval = 10
 
     # データ作成
@@ -25,7 +25,6 @@ def main():
     for i in range(len(input_list)):
         D[i][0] = [1]
         D[i][0].extend(list(input_list[i]))
-    D_size = len(D)
 
     # 1.2 Generate output pairs
     input_size_half = n1 // 2
@@ -39,7 +38,7 @@ def main():
     
     # ここから実験
     # for n2 in n2_list:
-    MSNet = Net(D, n1, n2, mu, iterations, detail_logging=True)
+    MSNet = Net(D, n1, n2, mu, iterations, detail_logging=True, use_data=64)
     # log_E = MSNet.train(progress_interval)
     log_E = MSNet.train_with_detail_logging(progress_interval)
     MSNet.test()
@@ -53,6 +52,7 @@ def main():
     # 正解率
     x_index = range(0, iterations, progress_interval)
     plt.plot(x_index, MSNet.log_correct_rate, linestyle='None', marker=".", ms=1)
+    plt.ylim(-0.01, 1.01)
     plt.xlabel("iterations")
     plt.title("percentage of correct responses")
     plt.show()
