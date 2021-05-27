@@ -130,6 +130,7 @@
     ],
     "python.pythonPath": "env/bin/python",
     "python.analysis.extraPaths": [
-        "./Backpropagation"
+        "./Backpropagation",
+        "./AssociativeMemory"
     ]
 }
