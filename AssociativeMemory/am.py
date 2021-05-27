@@ -4,7 +4,10 @@ import matplotlib.pyplot as plt
 
 class amNet:
     result_list = []
-    def __init__(self, n: int, m: int):
+    def __init__(self, n: int, m: int, seed: int = 2021):
+        # seed
+        np.random.seed(seed)
+        
         # 定数
         self.N = n
         self.M = m
@@ -60,5 +63,6 @@ class amNet:
 
     def show_result(self):
         for y in self.result_list:
-            plt.plot(range(self.iteration + 1), y)
+            plt.plot(range(self.iteration + 1), y, linewidth=1.0)
+        plt.xlim(-0.1, 12)
         plt.show()

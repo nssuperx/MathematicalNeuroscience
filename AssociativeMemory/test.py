@@ -2,7 +2,7 @@ from am import amNet
 
 # constant value
 n = 1000
-m = 80
+m = 200
 
 def main():
     net = amNet(n, m)
