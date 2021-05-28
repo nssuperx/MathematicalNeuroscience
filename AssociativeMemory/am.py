@@ -2,6 +2,12 @@ from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+キーワード
+多重分散型記憶
+並列
+"""
+
 class amNet:
     result_list = []
     def __init__(self, n: int, m: int, seed: int = 2021):
@@ -29,6 +35,7 @@ class amNet:
         self.w = self.w / self.N
 
         self.result_list = []
+        self.result_img_list = []
 
     def sgn(self):
         before_x = np.copy(self.x)
@@ -52,6 +59,7 @@ class amNet:
             print("flip a =  " + str(flip_num))
             self.flip_set_x(flip_num)
             self.update()
+            self.result_img_list.append(self.x)
 
     def update(self):
         now_result_list = []
@@ -64,5 +72,17 @@ class amNet:
     def show_result(self):
         for y in self.result_list:
             plt.plot(range(self.iteration + 1), y, linewidth=1.0)
-        plt.xlim(-0.1, 12)
+        # plt.xlim(-0.1, 12)
+        plt.show()
+
+    def show_image(self):
+        fig = plt.figure()
+        graph_size = len(self.result_img_list)
+        print(graph_size)
+        for i in range(graph_size):
+            ax = fig.add_subplot(4, int(graph_size/4), i+1)
+            ax.set_title("flip:" + str(i*25))
+            ax.axes.xaxis.set_visible(False)
+            ax.axes.yaxis.set_visible(False)
+            ax.imshow(self.result_img_list[i].reshape(40, 25))
         plt.show()
