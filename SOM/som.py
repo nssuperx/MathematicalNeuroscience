@@ -9,7 +9,7 @@ import matplotlib.animation as animation
 NX = 16
 NY = 16
 DIM = 2     #dimension
-iterations = 100000
+iterations = 10000
 alpha = 0.2
 sigma = 0.8
 sigma2 = 2 * sigma**2
@@ -76,9 +76,11 @@ class som:
                         im = plt.plot([self.m[j-1][k][0], self.m[j][k][0]], [self.m[j-1][k][1], self.m[j][k][1]], color='red')
                         lines.extend(im)
                         
+                lines.append(plt.text(0.0, 1.01,i, ha="center", va="bottom", fontsize="large"))
                 plts.append(lines)
 
-        anim = animation.ArtistAnimation(fig, plts, interval=200)
+        anim = animation.ArtistAnimation(fig, plts, interval=200, repeat_delay=500)
+        anim.save('test.gif', writer="imagemagick")
         plt.show()
 
 def make_exp_table():
