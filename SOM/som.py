@@ -1,5 +1,6 @@
 import math
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -18,15 +19,21 @@ exp_table = {}
 
 class som:
     def __init__(self):
+        '''
         self.m = [[[0.0] * DIM for i in range(NX)] for j in range(NY)]
-        
         for i in range(NY):
             for j in range(NX):
                 for k in range(DIM):
                     self.m[i][j][k] = random.uniform(-0.1, 0.1)
+        '''
+        self.m = np.random.default_rng().uniform(-0.5, 0.5, size=(NY, NX, DIM))
+        # print(self.m.shape)
 
     def activity_dynamics(self, x, y):
-        min_distance = float('inf')
+        # min_distance = float('inf')
+        distance = (x - self.m[:,:,0])**2 + (y - self.m[:,:,1])**2
+        self.rc_x, self.rc_y = np.unravel_index(np.argmin(distance), distance.shape)
+        '''
         for i in range(NY):
             for j in range(NX):
                 distance = (x - self.m[i][j][0])**2 + (y - self.m[i][j][1])**2
@@ -34,6 +41,7 @@ class som:
                     min_distance = distance
                     self.rc_x = i
                     self.rc_y = j
+        '''
 
     def learning_dynamics(self, x, y):
         for i in range(NY):
@@ -76,9 +84,9 @@ class som:
 def make_exp_table():
     global exp_table
     for i in range(NY):
-            for j in range(NX):
-                distance = i**2 + j**2
-                exp_table[distance] = math.exp(-distance / sigma2)
+        for j in range(NX):
+            distance = i**2 + j**2
+            exp_table[distance] = math.exp(-distance / sigma2)
 
 
 def main():
