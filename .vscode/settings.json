@@ -128,9 +128,10 @@
             ],
         },
     ],
-    "python.pythonPath": "env/bin/python",
+    "python.pythonPath": "env\\Scripts\\python.exe",
     "python.analysis.extraPaths": [
         "./Backpropagation",
         "./AssociativeMemory"
-    ]
+    ],
+    "terminal.integrated.defaultProfile.windows": "Git Bash"
 }
