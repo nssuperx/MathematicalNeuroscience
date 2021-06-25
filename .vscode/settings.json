@@ -131,7 +131,8 @@
     "python.pythonPath": "env\\Scripts\\python.exe",
     "python.analysis.extraPaths": [
         "./Backpropagation",
-        "./AssociativeMemory"
+        "./AssociativeMemory",
+        "./BoltzmannMachine"
     ],
     "terminal.integrated.defaultProfile.windows": "Git Bash"
 }
