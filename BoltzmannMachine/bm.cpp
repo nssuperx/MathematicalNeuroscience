@@ -4,14 +4,20 @@
 #include<cmath>
 using namespace std;
 
+
 class BoltzmannMachine{
     public:
-    BoltzmannMachine(int neuron);
+    enum class weight_mode : char{
+        zero,
+        random5
+    };
+
+    BoltzmannMachine(int neuron, weight_mode wm);
     void set_default_state();
-    void set_default_weight();
+    void set_default_weight(weight_mode wm);
     void update_state(int neuron_number);
-    double calc_stationary_dist();
     void count_state();
+    vector<double> calc_stationary_dist();
     vector<int> get_state_count();
 
     private:
@@ -24,10 +30,12 @@ class BoltzmannMachine{
 
     random_device rnd;      // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt;             // mersenne twister 32bit 擬似乱数生成器
-    uniform_int_distribution<> rand2;        // [0, 1] 範囲の一様乱数を生成
+    uniform_int_distribution<> rand2;               // [0, 1] 範囲の一様乱数を生成
+    uniform_real_distribution<> rand_real;          // [0.0, 1.0)の実数一様分布
+
 };
 
-BoltzmannMachine::BoltzmannMachine(int neuron){
+BoltzmannMachine::BoltzmannMachine(int neuron, weight_mode wm = weight_mode::zero){
     cout << "Boltzmann Machine" << endl;
     x.resize(neuron + 1);
     w.resize(x.size(), vector<double>(x.size()));
@@ -35,25 +43,36 @@ BoltzmannMachine::BoltzmannMachine(int neuron){
 
     mt = mt19937(rnd());
     rand2 = uniform_int_distribution<>(0, 1);
+    rand_real = uniform_real_distribution<>(0.0, 1.0);
 
     cout << "Set default state." << endl;
     set_default_state();
 
     cout << "Set weight." << endl;
-    set_default_weight();
+    set_default_weight(wm);
+    cout << "Done setup." << endl;
 }
 
 void BoltzmannMachine::set_default_state(){
     for(int i=0; i<x.size(); i++){
         x.at(i) = 0;
     }
-    x.at(0) = 0;
+    x.at(0) = 1;
 }
 
-void BoltzmannMachine::set_default_weight(){
-    for(int i=0; i<w.size(); i++){
-        for(int j=0; j<w.at(i).size(); j++){
-            w.at(i).at(j) = 0;
+void BoltzmannMachine::set_default_weight(weight_mode wm){
+    if(wm == weight_mode::zero){
+        for(int i=0; i<w.size(); i++){
+            for(int j=0; j<w.at(i).size(); j++){
+                w.at(i).at(j) = 0;
+            }
+        }
+    }else if(wm == weight_mode::random5){
+        uniform_int_distribution<> rand_int(-5, 5);
+        for(int i=0; i<w.size(); i++){
+            for(int j=0; j<w.at(i).size(); j++){
+                w.at(i).at(j) = rand_int(mt);
+            }
         }
     }
 }
@@ -62,25 +81,19 @@ void BoltzmannMachine::update_state(int neuron_number){
     count_state();
     double u = 0.0;
     for(int i=0; i<x.size(); i++){
-        u += w.at(neuron_number).at(i);
+        u += w.at(neuron_number).at(i) * x.at(i);
     }
     double prob = 1.0 / (1.0 + exp(-u / T));
-    x.at(neuron_number) = prob < rand2(mt) ? 0 : 1;
+    x.at(neuron_number) = prob < rand_real(mt) ? 0 : 1;
 }
 
-double BoltzmannMachine::calc_stationary_dist(){
-    double E = 0.0;
-    // 自己結合なし，x[0] == 1 なので，iは0はじまり，jはiはじまり．
-    for(int i=0; i<x.size(); i++){
-        for(int j=i; j<x.size(); j++){
-            E -= w.at(i).at(j) * (double)x.at(i) * (double)x.at(j);
-        }
-    }
-
+vector<double> BoltzmannMachine::calc_stationary_dist(){
+    // TODO: 再帰使うべき
+    vector<double> all_E((int)pow(2,x.size()-1));
     vector<int> all_x(x.size());
     vector<int> x_elements{0,1};
+    int state_number_count = 0;
     double c = 0.0;
-    // TODO: 再帰使うべき
     for(int x1: x_elements){
         for(int x2: x_elements){
             for(int x3: x_elements){
@@ -94,18 +107,27 @@ double BoltzmannMachine::calc_stationary_dist(){
                     }
                 }
                 c += exp(-tmp_E / T);
+                // TODO: なんとかしないと
+                all_E.at(state_number_count) = tmp_E;
+                state_number_count++;
             }
         }
     }
-    double ans = c * exp(-E / T);
-    cout << "stationary_dist: " << ans << endl;
-    return ans;
+
+    vector<double> p(all_E.size());
+    // 答えの代入と表示をいっしょにやってる
+    for(int i=0; i<all_E.size(); i++){
+        p.at(i) = exp(-all_E.at(i) / T) / c;
+        cout << "x" << i+1 << " " << "stationary_dist: " << p.at(i) << endl;
+    }
+
+    return p;
 }
 
 void BoltzmannMachine::count_state(){
     // shellのchmodみたいな考え方でやってる
     int state_number = 0;
-    for(int i=0; i<x.size(); i++){
+    for(int i=0; i<x.size()-1; i++){
         state_number += x.at(x.size()-1-i) * (int)pow(2,i);
     }
     state_count.at(state_number) += 1;      // いまの状態のカウント TODO: もっとスマートにできんかな
@@ -117,14 +139,17 @@ vector<int> BoltzmannMachine::get_state_count(){
 
 int main(){
     // TODO: bitsetで実装するべき
+    // https://cpprefjp.github.io/reference/bitset/bitset.html
+    // https://cpprefjp.github.io/reference/bitset/bitset/to_ullong.html
     int neuron = 3;
-    BoltzmannMachine bm(neuron);
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::zero);
 
     random_device rnd;      // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt(rnd());             // mersenne twister 32bit 擬似乱数生成器
     uniform_int_distribution<> rand_int(1, 3);        // [0, 1] 範囲の一様乱数を生成
 
-    for(int i=0; i<1000000; i++){
+    int l = 1000000;
+    for(int i=0; i<l; i++){
         bm.update_state(rand_int(mt));
     }
 
@@ -136,6 +161,8 @@ int main(){
         // sum_debug += state_count.at(i);
     }
     // cout << sum_debug << endl;
+
+    bm.calc_stationary_dist();
 
     return 0;
 }
