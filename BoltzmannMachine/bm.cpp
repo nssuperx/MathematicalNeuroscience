@@ -150,20 +150,21 @@ void BoltzmannMachine::update_state(int neuron_number){
 vector<double> BoltzmannMachine::calc_stationary_dist(){
     // TODO: 再帰使うべき
     vector<double> all_E((int)pow(2,x.size()-1));
-    vector<int> all_x(x.size());
+    vector<int> tmp_x(x.size());
+    tmp_x.at(0) = 1;
     vector<int> x_elements{0,1};
     int state_number_count = 0;
     double c = 0.0;
     for(int x1: x_elements){
         for(int x2: x_elements){
             for(int x3: x_elements){
-                all_x.at(1) = x1;
-                all_x.at(2) = x2;
-                all_x.at(3) = x3;
+                tmp_x.at(1) = x1;
+                tmp_x.at(2) = x2;
+                tmp_x.at(3) = x3;
                 double tmp_E = 0.0;
-                for(int i=0; i<all_x.size(); i++){
-                    for(int j=i; j<all_x.size(); j++){
-                        tmp_E -= w.at(i).at(j) * (double)all_x.at(i) * (double)all_x.at(j);
+                for(int i=0; i<tmp_x.size()-1; i++){
+                    for(int j=i+1; j<tmp_x.size(); j++){
+                        tmp_E -= w.at(i).at(j) * (double)tmp_x.at(i) * (double)tmp_x.at(j);
                     }
                 }
                 c += exp(-tmp_E / T);
@@ -178,7 +179,7 @@ vector<double> BoltzmannMachine::calc_stationary_dist(){
     // 答えの代入と表示をいっしょにやってる
     for(int i=0; i<all_E.size(); i++){
         p.at(i) = exp(-all_E.at(i) / T) / c;
-        cout << "x" << i+1 << " " << "stationary_dist: " << p.at(i) << endl;
+        cout << "x" << i << " " << "stationary_dist: " << p.at(i) << endl;
     }
 
     return p;
@@ -294,7 +295,7 @@ int main(){
     // https://cpprefjp.github.io/reference/bitset/bitset.html
     // https://cpprefjp.github.io/reference/bitset/bitset/to_ullong.html
     int neuron = 3;
-    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::random5);
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::x36);
 
     random_device rnd;      // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt(rnd());             // mersenne twister 32bit 擬似乱数生成器
@@ -302,7 +303,7 @@ int main(){
 
     bm.print_weight();
 
-    int l = 1000;
+    int l = 1000000;
     cout << "l=" << l << endl;
     for(int i=0; i<l; i++){
         bm.update_state(rand_int(mt));
@@ -312,15 +313,15 @@ int main(){
 
     // int sum_debug = 0;
     for(int i=0; i<state_count.size(); i++){
-        cout << "x" << i+1 << " : " << state_count.at(i) << '\t' << (double)state_count.at(i)/(double)l << endl;
+        cout << "x" << i << " : " << state_count.at(i) << '\t' << (double)state_count.at(i)/(double)l << endl;
         // sum_debug += state_count.at(i);
     }
     // cout << sum_debug << endl;
 
     bm.calc_stationary_dist();
 
-    bm.generate_x();
-    bm.print_frequency();
+    // bm.generate_x();
+    // bm.print_frequency();
 
     return 0;
 }
