@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <numeric>
 #include <random>
@@ -35,6 +36,7 @@ class BoltzmannMachine {
     void count_frequency(vector<int> x, vector<vector<int>> &count_matrix);
     void reset_frequency();
     void generate_x();
+    void set_model_frec(vector<vector<double>> freq_matrix, int batch_size);
     void print_frequency(int state_num);
 
   private:
@@ -54,8 +56,6 @@ class BoltzmannMachine {
 
     vector<vector<int>> same_one_count_f;
     vector<vector<int>> same_one_count_g;
-    // map<string, int> freq_count_f;
-    // map<string, int> freq_count_g;
 
     vector<double> dist_q;
 
@@ -75,8 +75,6 @@ BoltzmannMachine::BoltzmannMachine(int neuron, weight_mode wm = weight_mode::zer
 
     for(int i = 0; i < x.size(); i++) {
         for(int j = 0; j < x.size(); j++) {
-            // freq_count_f[to_string(i) + to_string(j)] = 0;
-            // freq_count_g[to_string(i) + to_string(j)] = 0;
             same_one_count_f.at(i).at(j) = 0;
             same_one_count_g.at(i).at(j) = 0;
         }
@@ -160,7 +158,7 @@ void BoltzmannMachine::update_state(int neuron_number) {
     count_frequency(x, same_one_count_g);
     double u = 0.0;
     for(int i = 0; i < x.size(); i++) {
-        u += w.at(neuron_number).at(i) * x.at(i);
+        u += w.at(neuron_number).at(i) * (double)x.at(i);
     }
     double prob = 1.0 / (1.0 + exp(-u / T));
     x.at(neuron_number) = prob < rand_real(mt) ? 0 : 1;
@@ -169,13 +167,7 @@ void BoltzmannMachine::update_state(int neuron_number) {
 void BoltzmannMachine::update_weight() {
     for(int i = 0; i < w.size() - 1; i++) {
         for(int j = i + 1; j < w.at(i).size(); j++) {
-            // w.at(i).at(j) += lr * (double)(freq_count_f[to_string(i) + to_string(j)] - freq_count_g[to_string(i) + to_string(j)]) / (double)batch_size;
             w.at(i).at(j) += lr * (double)(same_one_count_f.at(i).at(j) - same_one_count_g.at(i).at(j)) / (double)batch_size;
-        }
-    }
-    // 一応見た目のために
-    for(int i = 0; i < w.size() - 1; i++) {
-        for(int j = i + 1; j < w.at(i).size(); j++) {
             w.at(j).at(i) = w.at(i).at(j);
         }
     }
@@ -294,6 +286,18 @@ void BoltzmannMachine::generate_x() {
     }
 }
 
+void BoltzmannMachine::set_model_frec(vector<vector<double>> freq_matrix, int batch_size){
+    if(same_one_count_f.size() != freq_matrix.size() || same_one_count_f.at(0).size() != freq_matrix.at(0).size()){
+        cout << "wrong freq matrix size!!" << endl;
+        return;
+    }
+    for(int i=0; i<same_one_count_f.size(); i++){
+        for(int j=0; j<same_one_count_f.at(i).size(); j++){
+            same_one_count_f.at(i).at(j) = (int)(freq_matrix.at(i).at(j) * (double)batch_size);
+        }
+    }
+}
+
 void BoltzmannMachine::count_frequency(vector<int> x, map<string, int> &freq) {
     // TODO: なにこれ
     for(int i = 0; i < x.size() - 1; i++) {
@@ -316,11 +320,6 @@ void BoltzmannMachine::count_frequency(vector<int> x, vector<vector<int>> &count
 }
 
 void BoltzmannMachine::reset_frequency() {
-    /*
-    for(auto itr = freq_count_g.begin(); itr != freq_count_g.end(); ++itr) {
-        itr->second = 0;
-    }
-    */
     for(int i = 0; i < x.size(); i++) {
         for(int j = 0; j < x.size(); j++) {
             same_one_count_g.at(i).at(j) = 0;
@@ -331,10 +330,6 @@ void BoltzmannMachine::reset_frequency() {
 void BoltzmannMachine::print_frequency(int state_num) {
     // TODO: 設計ミスった．
     cout << "frequency f" << endl;
-    // int sum = map_accumulate(freq_count_f);
-    // for(auto itr = freq_count_f.begin(); itr != freq_count_f.end(); ++itr) {
-    //     cout << "f" << itr->first << ":" << '\t' << itr->second << '\t' << (double)itr->second / (double)batch_size << endl;
-    // }
     for(int i = 0; i < same_one_count_f.size(); i++) {
         for(int j = 0; j < same_one_count_f.at(i).size(); j++) {
             cout << same_one_count_f.at(i).at(j) << "  ";
@@ -342,13 +337,8 @@ void BoltzmannMachine::print_frequency(int state_num) {
         cout << endl;
     }
 
-
     cout << "frequency g" << endl;
-    // sum = map_accumulate(freq_count_g);
     if(state_num == 0) return;
-    // for(auto itr = freq_count_g.begin(); itr != freq_count_g.end(); ++itr) {
-    //     cout << "f" << itr->first << ":" << '\t' << itr->second << '\t' << (double)itr->second / (double)state_num << endl;
-    // }
     for(int i = 0; i < same_one_count_g.size(); i++) {
         for(int j = 0; j < same_one_count_g.at(i).size(); j++) {
             cout << same_one_count_g.at(i).at(j) << "  ";
@@ -373,17 +363,33 @@ double calc_KLdiv(vector<double> q, vector<double> p){
     return D;
 }
 
+vector<vector<double>> make_freq_f(int neuron){
+    vector<vector<double>> freq_f;
+    freq_f.resize(neuron+1, vector<double>(neuron+1));
+    for(int i = 0; i < freq_f.size(); i++) {
+        for(int j = 0; j < freq_f.size(); j++) {
+            freq_f.at(i).at(j) = 0;
+        }
+    }
+    freq_f.at(0).at(1) = 0.7;
+    freq_f.at(0).at(2) = 0.6;
+    freq_f.at(0).at(3) = 0.35;
+    freq_f.at(1).at(2) = 0.5;
+    freq_f.at(1).at(3) = 0.2;
+    freq_f.at(2).at(3) = 0.15;
+    return freq_f;
+}
+
 int main() {
     // TODO: bitsetで実装するべき
     // https://cpprefjp.github.io/reference/bitset/bitset.html
     // https://cpprefjp.github.io/reference/bitset/bitset/to_ullong.html
     int neuron = 3;
-    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::zero);
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::random5);
 
     random_device rnd;                         // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt(rnd());                         // mersenne twister 32bit 擬似乱数生成器
     uniform_int_distribution<> rand_int(1, 3); // [0, 1] 範囲の一様乱数を生成
-
 
     int l = 10000;
     cout << "l=" << l << endl;
@@ -396,10 +402,12 @@ int main() {
 
     vector<double> dist_q{0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.4, 0.1};
     vector<double> dist_p;
-    bm.set_dist_q(dist_q);
-    bm.generate_x();
-    vector<double> D(l);
+    vector<vector<double>> freq_f = make_freq_f(neuron);
     int batch_size = 100;
+    bm.set_dist_q(dist_q);
+    bm.set_model_frec(freq_f, batch_size);
+    // bm.generate_x();
+    vector<double> D(l);
     for(int i = 0; i < l; i++) {
         bm.reset_frequency();
         bm.reset_state_count();
@@ -427,9 +435,12 @@ int main() {
 
     bm.calc_stationary_dist();
 
+    ofstream outfile("KLdiv.csv");
     for(int i=0; i<D.size(); i++){
-        if(i % 100 == 0) cout << i << ":\t\t" << D.at(i) << endl;
+        // if(i % 100 == 0) cout << i << ":\t\t" << D.at(i) << endl;
+        outfile << i << ',' << D.at(i) << endl;
     }
+    outfile.close();
 
     return 0;
 }
