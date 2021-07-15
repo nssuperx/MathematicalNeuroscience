@@ -19,7 +19,8 @@ class pgm {
     normal_distribution<> rand_y;
 
     double p00, p01, p10, p11; // データ生成時に使用
-                               // vector<double> mp;
+
+    // vector<double> mp;
 
   public:
     pgm();
@@ -27,8 +28,9 @@ class pgm {
     double compute_s_template();
     double compute_s_parts();
     void generate_data(int xi, int n1, int n2);
+    void set_data(vector<int> x, vector<vector<double>> y);
     int judge(double value, double theta);
-    void calc(int alpha, int xi, int n1);
+    void test(int alpha, int xi, int n1);
     void out_result(vector<pair<double, double>> &result, string filename);
     void print_x_y();
 };
@@ -64,10 +66,13 @@ double pgm::compute_s_god() {
     double sum = 0.0;
     for(int x1 = 0; x1 <= 1; x1++) {
         for(int x2 = 0; x2 <= 1; x2++) {
+            vector<double> x_tilde(2); // TODO: マジックナンバー!!!!!
+            x_tilde.at(0) = (double)x1;
+            x_tilde.at(1) = (double)x2;
             double expsum = 0.0;
             for(int i = 0; i < 2; i++) {
                 for(int j = 0; j < y.at(i).size(); j++) {
-                    expsum += (1 - 2 * y.at(i).at(j) + 2 * y.at(i).at(j) * px[i][i] - px[i][i] * px[i][i]) / 2 * sigma * sigma;
+                    expsum += (1.0 - 2.0 * y.at(i).at(j) + 2.0 * y.at(i).at(j) * x_tilde.at(i) - x_tilde.at(i) * x_tilde.at(i)) / (2.0 * sigma * sigma);
                 }
             }
             sum += px[x1][x2] * exp(expsum);
@@ -82,7 +87,7 @@ double pgm::compute_s_template() {
     double expsum = 0.0;
     for(int i = 0; i < 2; i++) {
         for(int j = 0; j < y.at(i).size(); j++) {
-            expsum += (1 - 2 * y.at(i).at(j)) / 2 * sigma * sigma;
+            expsum += (1 - 2 * y.at(i).at(j)) / (2 * sigma * sigma);
         }
     }
 
@@ -93,13 +98,13 @@ double pgm::compute_s_parts() {
     // NOTE: 拡張性が全くないので何とかする
     double expsum = 0.0;
     for(int j = 0; j < y.at(0).size(); j++) {
-        expsum += (1 - 2 * y.at(0).at(j)) / 2 * sigma * sigma;
+        expsum += (1 - 2 * y.at(0).at(j)) / (2 * sigma * sigma);
     }
     double pr1 = 1 / (1 + (px[0][0] + px[0][1]) / (px[1][0] + px[1][1]) * exp(expsum));
 
     expsum = 0.0;
     for(int j = 0; j < y.at(1).size(); j++) {
-        expsum += (1 - 2 * y.at(1).at(j)) / 2 * sigma * sigma;
+        expsum += (1 - 2 * y.at(1).at(j)) / (2 * sigma * sigma);
     }
     double pr2 = 1 / (1 + px[1][0] / px[1][1] * exp(expsum));
 
@@ -129,6 +134,10 @@ void pgm::generate_data(int xi, int n1, int n2) {
     }
 }
 
+void pgm::set_data(vector<int> x, vector<vector<double>> y){
+    
+}
+
 int pgm::judge(double value, double theta) {
     if(value > theta) {
         return 1;
@@ -137,7 +146,7 @@ int pgm::judge(double value, double theta) {
     }
 }
 
-void pgm::calc(int alpha, int xi, int n1) {
+void pgm::test(int alpha, int xi, int n1) {
     vector<pair<double, double>> roc_sg, roc_st, roc_sp; // NOTE: 横軸fpr, 縦軸cdr
     pair<double, double> p_sg, p_st, p_sp;
 
@@ -145,7 +154,6 @@ void pgm::calc(int alpha, int xi, int n1) {
     y.resize(xi, vector<double>(n1));
 
     // いろんなカウンタ
-    int xa_not11;
     int xa_is11;
 
     int fpr_count_Sg;
@@ -167,7 +175,6 @@ void pgm::calc(int alpha, int xi, int n1) {
     // いろんな方法で計算
     for(double theta = 0.0; theta <= 1.0; theta += 0.01) {
         xa_is11 = 0;
-        xa_not11 = 0;
 
         fpr_count_Sg = 0;
         cdr_count_Sg = 0;
@@ -185,18 +192,17 @@ void pgm::calc(int alpha, int xi, int n1) {
                 cdr_count_St += judge(compute_s_template(), theta);
                 cdr_count_Sp += judge(compute_s_parts(), theta);
             } else {
-                xa_not11++;
                 fpr_count_Sg += judge(compute_s_god(), theta);
                 fpr_count_St += judge(compute_s_template(), theta);
                 fpr_count_Sp += judge(compute_s_parts(), theta);
             }
         }
 
-        p_sg.first = (double)fpr_count_Sg / (double)xa_not11;
+        p_sg.first = (double)fpr_count_Sg / (double)(alpha - xa_is11);
         p_sg.second = (double)cdr_count_Sg / (double)xa_is11;
-        p_st.first = (double)fpr_count_St / (double)xa_not11;
+        p_st.first = (double)fpr_count_St / (double)(alpha - xa_is11);
         p_st.second = (double)cdr_count_St / (double)xa_is11;
-        p_sp.first = (double)fpr_count_Sp / (double)xa_not11;
+        p_sp.first = (double)fpr_count_Sp / (double)(alpha - xa_is11);
         p_sp.second = (double)cdr_count_Sp / (double)xa_is11;
 
         roc_sg.push_back(p_sg);
@@ -243,6 +249,6 @@ int main() {
     int alpha = 1000;
     int n1 = 3;
     int i = 2; // xの上付き数字 i
-    model.calc(alpha, i, n1);
+    model.test(alpha, i, n1);
     return 0;
 }
