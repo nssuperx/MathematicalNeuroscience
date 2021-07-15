@@ -7,6 +7,11 @@
 #include <vector>
 using namespace std;
 
+struct pgm_data{
+    vector<int> x;
+    vector<vector<double>> y;
+};
+
 class pgm {
   private:
     const double sigma = 1.0;
@@ -27,8 +32,8 @@ class pgm {
     double compute_s_god();
     double compute_s_template();
     double compute_s_parts();
-    void generate_data(int xi, int n1, int n2);
-    void set_data(vector<int> x, vector<vector<double>> y);
+    pgm_data generate_data(int xi, int n1, int n2);
+    void set_data(pgm_data data);
     int judge(double value, double theta);
     void test(int alpha, int xi, int n1);
     void out_result(vector<pair<double, double>> &result, string filename);
@@ -111,7 +116,7 @@ double pgm::compute_s_parts() {
     return pr1 * pr2;
 }
 
-void pgm::generate_data(int xi, int n1, int n2) {
+pgm_data pgm::generate_data(int xi, int n1, int n2) {
     double r = rand_x(mt);
     if(r < p00) {
         x.at(0) = 0;
@@ -132,10 +137,14 @@ void pgm::generate_data(int xi, int n1, int n2) {
             y.at(i).at(j) = (double)x.at(i) + rand_y(mt);
         }
     }
+
+    pgm_data data = {x, y};
+    return data;
 }
 
-void pgm::set_data(vector<int> x, vector<vector<double>> y){
-    
+void pgm::set_data(pgm_data data){
+    x = data.x;
+    y = data.y;
 }
 
 int pgm::judge(double value, double theta) {
@@ -172,6 +181,13 @@ void pgm::test(int alpha, int xi, int n1) {
     roc_st.push_back(p_st);
     roc_sp.push_back(p_sp);
 
+    // 大量のデータを生成
+    // TODO: メモリ食いすぎ
+    vector<pgm_data> pgm_datas(alpha);
+    for(int i=0; i<alpha; i++){
+        pgm_datas.at(i) = generate_data(xi, n1, n1);
+    }
+
     // いろんな方法で計算
     for(double theta = 0.0; theta <= 1.0; theta += 0.01) {
         xa_is11 = 0;
@@ -184,8 +200,7 @@ void pgm::test(int alpha, int xi, int n1) {
         cdr_count_Sp = 0;
 
         for(int i = 0; i < alpha; i++) {
-            generate_data(xi, n1, n1);
-            // print_x_y();
+            set_data(pgm_datas.at(i));
             if(x.at(0) == 1 && x.at(1) == 1) {
                 xa_is11++;
                 cdr_count_Sg += judge(compute_s_god(), theta);
