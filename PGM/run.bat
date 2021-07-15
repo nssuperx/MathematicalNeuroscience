@@ -1,3 +1,3 @@
 wsl g++ pgm.cpp -o pgm.out
 wsl ./pgm.out
-wsl gnuplot -persist pgm.plt
+python graph_plot.py
