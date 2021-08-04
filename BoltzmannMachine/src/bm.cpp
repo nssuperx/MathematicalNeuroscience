@@ -1,12 +1,4 @@
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <numeric>
-#include <random>
-#include <string>
-#include <vector>
+#include "bm.hpp"
 using namespace std;
 
 int map_accumulate(map<string, int> m);
