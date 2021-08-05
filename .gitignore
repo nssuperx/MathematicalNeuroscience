@@ -280,3 +280,6 @@ env
 
 # report build file
 report.pdf
+
+# c object file
+*.o

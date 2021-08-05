@@ -4,6 +4,11 @@ using namespace std;
 int map_accumulate(map<string, int> m);
 double calc_KLdiv(vector<double> q, vector<double> p);
 
+void q1a();
+void q1b();
+void q1c();
+void q2h();
+
 class BoltzmannMachine {
   public:
     enum class weight_mode : char {
@@ -376,22 +381,39 @@ int main() {
     // TODO: bitsetで実装するべき
     // https://cpprefjp.github.io/reference/bitset/bitset.html
     // https://cpprefjp.github.io/reference/bitset/bitset/to_ullong.html
+    q1c();
+    return 0;
+}
+
+void q1c(){
     int neuron = 3;
-    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::random5);
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::x36);
 
     random_device rnd;                         // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt(rnd());                         // mersenne twister 32bit 擬似乱数生成器
-    uniform_int_distribution<> rand_int(1, 3); // [0, 1] 範囲の一様乱数を生成
+    uniform_int_distribution<> rand_int(1, 3); // [1, 3] 範囲の一様乱数を生成
 
-    int l = 10000;
+    int l = 1000;
     cout << "l=" << l << endl;
 
-    /* 問題1
     for(int i=0; i<l; i++){
         bm.update_state(rand_int(mt));
     }
-    */
 
+    bm.print_weight();
+}
+
+void q2h(){
+    int neuron = 3;
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::x36);
+
+    random_device rnd;                         // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
+    mt19937 mt(rnd());                         // mersenne twister 32bit 擬似乱数生成器
+    uniform_int_distribution<> rand_int(1, 3); // [1, 3] 範囲の一様乱数を生成
+
+    int l = 1000;
+    cout << "l=" << l << endl;
+    
     vector<double> dist_q{0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.4, 0.1};
     vector<double> dist_p;
     vector<vector<double>> freq_f = make_freq_f(neuron);
@@ -433,6 +455,4 @@ int main() {
         outfile << i << ',' << D.at(i) << endl;
     }
     outfile.close();
-
-    return 0;
 }

@@ -183,4 +183,8 @@
     ],
     "terminal.integrated.defaultProfile.windows": "Git Bash",
     "C_Cpp.clang_format_style": "{BreakBeforeBraces: Attach, SpaceBeforeParens: Never, IndentWidth: 4, ColumnLimit: 0, AllowShortIfStatementsOnASingleLine: true}",
+    "[Makefile]": {
+        "editor.insertSpaces": false,
+        "editor.detectIndentation": false
+    },
 }

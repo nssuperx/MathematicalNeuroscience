@@ -1,3 +1,3 @@
-wsl g++ bm.cpp
+wsl make
 wsl ./a.out
 python graph_plot.py
