@@ -54,8 +54,7 @@ class BoltzmannMachine {
     vector<vector<int>> same_one_count_f;
     vector<vector<int>> same_one_count_g;
 
-    vector<double> dist_q;
-
+    vector<double> dist_q; // xを生成するときの確率分布
 };
 
 BoltzmannMachine::BoltzmannMachine(int neuron, weight_mode wm = weight_mode::zero) {
@@ -138,14 +137,14 @@ void BoltzmannMachine::set_default_weight(weight_mode wm) {
     }
 }
 
-void BoltzmannMachine::set_dist_q(vector<double> dist){
+void BoltzmannMachine::set_dist_q(vector<double> dist) {
     dist_q = dist;
 }
 
-vector<double> BoltzmannMachine::get_dist_p(){
+vector<double> BoltzmannMachine::get_dist_p() {
     vector<double> dist_p(state_count.size());
     for(int i = 0; i < state_count.size(); i++) {
-        dist_p.at(i)  =  (double)state_count.at(i) / (double)batch_size;
+        dist_p.at(i) = (double)state_count.at(i) / (double)batch_size;
     }
     return dist_p;
 }
@@ -197,7 +196,6 @@ vector<double> BoltzmannMachine::calc_stationary_dist() {
                     }
                 }
                 c += exp(-tmp_E / T);
-                // TODO: なんとかしないと
                 all_E.at(state_number_count) = tmp_E;
                 state_number_count++;
             }
@@ -283,13 +281,13 @@ void BoltzmannMachine::generate_x() {
     }
 }
 
-void BoltzmannMachine::set_model_frec(vector<vector<double>> freq_matrix, int batch_size){
-    if(same_one_count_f.size() != freq_matrix.size() || same_one_count_f.at(0).size() != freq_matrix.at(0).size()){
+void BoltzmannMachine::set_model_frec(vector<vector<double>> freq_matrix, int batch_size) {
+    if(same_one_count_f.size() != freq_matrix.size() || same_one_count_f.at(0).size() != freq_matrix.at(0).size()) {
         cout << "wrong freq matrix size!!" << endl;
         return;
     }
-    for(int i=0; i<same_one_count_f.size(); i++){
-        for(int j=0; j<same_one_count_f.at(i).size(); j++){
+    for(int i = 0; i < same_one_count_f.size(); i++) {
+        for(int j = 0; j < same_one_count_f.at(i).size(); j++) {
             same_one_count_f.at(i).at(j) = (int)(freq_matrix.at(i).at(j) * (double)batch_size);
         }
     }
@@ -352,17 +350,17 @@ int map_accumulate(map<string, int> m) {
     return sum;
 }
 
-double calc_KLdiv(vector<double> q, vector<double> p){
+double calc_KLdiv(vector<double> q, vector<double> p) {
     double D = 0.0;
-    for(int i=0; i<q.size(); i++){
+    for(int i = 0; i < q.size(); i++) {
         D += q.at(i) * log(q.at(i) / (p.at(i) + 0.00001));
     }
     return D;
 }
 
-vector<vector<double>> make_freq_f(int neuron){
+vector<vector<double>> make_freq_f(int neuron) {
     vector<vector<double>> freq_f;
-    freq_f.resize(neuron+1, vector<double>(neuron+1));
+    freq_f.resize(neuron + 1, vector<double>(neuron + 1));
     for(int i = 0; i < freq_f.size(); i++) {
         for(int j = 0; j < freq_f.size(); j++) {
             freq_f.at(i).at(j) = 0;
@@ -378,14 +376,11 @@ vector<vector<double>> make_freq_f(int neuron){
 }
 
 int main() {
-    // TODO: bitsetで実装するべき
-    // https://cpprefjp.github.io/reference/bitset/bitset.html
-    // https://cpprefjp.github.io/reference/bitset/bitset/to_ullong.html
-    q1c();
+    q2h();
     return 0;
 }
 
-void q1c(){
+void q1c() {
     int neuron = 3;
     BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::x36);
 
@@ -395,17 +390,17 @@ void q1c(){
 
     int l = 1000;
     cout << "l=" << l << endl;
-
-    for(int i=0; i<l; i++){
-        bm.update_state(rand_int(mt));
-    }
 
     bm.print_weight();
+
+    for(int i = 0; i < l; i++) {
+        bm.update_state(rand_int(mt));
+    }
 }
 
-void q2h(){
+void q2h() {
     int neuron = 3;
-    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::x36);
+    BoltzmannMachine bm(neuron, BoltzmannMachine::weight_mode::zero);
 
     random_device rnd;                         // 非決定的な乱数生成器を生成, /dev/randomとかを見たりする. シード値の代わりに使う．
     mt19937 mt(rnd());                         // mersenne twister 32bit 擬似乱数生成器
@@ -413,7 +408,7 @@ void q2h(){
 
     int l = 1000;
     cout << "l=" << l << endl;
-    
+
     vector<double> dist_q{0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.4, 0.1};
     vector<double> dist_p;
     vector<vector<double>> freq_f = make_freq_f(neuron);
@@ -450,7 +445,7 @@ void q2h(){
     bm.calc_stationary_dist();
 
     ofstream outfile("KLdiv.csv");
-    for(int i=0; i<D.size(); i++){
+    for(int i = 0; i < D.size(); i++) {
         // if(i % 100 == 0) cout << i << ":\t\t" << D.at(i) << endl;
         outfile << i << ',' << D.at(i) << endl;
     }
